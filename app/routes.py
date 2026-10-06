@@ -35,3 +35,17 @@ def get_trips():
         TripResponse.model_validate(trip).model_dump(mode="json") for trip in trips
     ]
     return jsonify(response), 200
+
+
+@trip_bp.get("/<int:trip_id>")
+def get_trip(trip_id: int):
+    trip = db.session.get(Trip, trip_id)
+    if not trip:
+        return jsonify(
+            {
+                "error": "TRIP_NOT_FOUND",
+                "message": f"Trip with ID {trip_id} was not found.",
+            }
+        ), 404
+
+    return jsonify(TripResponse.model_validate(trip).model_dump(mode="json")), 200

@@ -1,10 +1,19 @@
 from datetime import date
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    PositiveInt,
+    StringConstraints,
+    model_validator,
+)
 
 
 class TripCreate(BaseModel):
-    destination: str = Field(min_length=1, max_length=100)
+    destination: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
+    ]
     start_date: date
     end_date: date
     budget: PositiveInt
@@ -31,7 +40,10 @@ class TripResponse(BaseModel):
 
 
 class TripUpdate(BaseModel):
-    destination: str | None = Field(default=None, min_length=1, max_length=100)
+    destination: Annotated[
+        str | None,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=100),
+    ] = None
     start_date: date | None = None
     end_date: date | None = None
     budget: PositiveInt | None = None

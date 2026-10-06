@@ -71,3 +71,10 @@ def delete_trip(trip_id: int):
     db.session.commit()
 
     return {"message": f"Trip with ID {trip_id} has been deleted."}
+
+
+def trip_not_found_response(trip_id: int):
+    return {
+        "error": "TRIP_NOT_FOUND",
+        "message": f"Trip with ID {trip_id} was not found.",
+    }

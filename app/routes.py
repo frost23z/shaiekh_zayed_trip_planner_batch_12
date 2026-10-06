@@ -21,7 +21,7 @@ def get_trips():
 def get_trip(trip_id: int):
     trip = services.get_trip(trip_id)
     if not trip:
-        return trip_not_found_response(trip_id)
+        return jsonify(services.trip_not_found_response(trip_id)), 404
 
     return jsonify(trip), 200
 
@@ -30,7 +30,7 @@ def get_trip(trip_id: int):
 def update_trip(trip_id: int):
     trip = services.update_trip(trip_id, TripUpdate.model_validate(request.get_json()))
     if not trip:
-        return trip_not_found_response(trip_id)
+        return jsonify(services.trip_not_found_response(trip_id)), 404
     return jsonify(trip), 200
 
 
@@ -38,15 +38,6 @@ def update_trip(trip_id: int):
 def delete_trip(trip_id: int):
     result = services.delete_trip(trip_id)
     if not result:
-        return trip_not_found_response(trip_id)
+        return jsonify(services.trip_not_found_response(trip_id)), 404
 
     return jsonify(result), 200
-
-
-def trip_not_found_response(trip_id: int):
-    return jsonify(
-        {
-            "error": "TRIP_NOT_FOUND",
-            "message": f"Trip with ID {trip_id} was not found.",
-        }
-    ), 404

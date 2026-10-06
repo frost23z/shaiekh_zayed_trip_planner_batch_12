@@ -28,3 +28,25 @@ class TripResponse(BaseModel):
     budget: int
     max_travelers: int
     status: str
+
+
+class TripUpdate(BaseModel):
+    destination: str | None = Field(default=None, min_length=1, max_length=100)
+    start_date: date | None = None
+    end_date: date | None = None
+    budget: PositiveInt | None = None
+    max_travelers: PositiveInt | None = None
+
+    @model_validator(mode="after")
+    def validate_update(self):
+        if not self.model_dump(exclude_none=True):
+            raise ValueError("At least one field must be provided for update.")
+
+        if (
+            self.start_date is not None
+            and self.end_date is not None
+            and self.end_date <= self.start_date
+        ):
+            raise ValueError("trip end_date must be later than start_date.")
+
+        return self

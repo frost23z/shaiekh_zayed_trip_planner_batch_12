@@ -27,6 +27,15 @@ def register_error_handlers(app: Flask) -> None:
             }
         ), 400
 
+    @app.errorhandler(ValueError)
+    def handle_value_error(error: ValueError):
+        return jsonify(
+            {
+                "error": "VALUE_ERROR",
+                "message": str(error),
+            }
+        ), 400
+
     @app.errorhandler(Exception)
     def handle_generic_error(error: Exception):
         logger.exception("Unhandled exception", exc_info=error)

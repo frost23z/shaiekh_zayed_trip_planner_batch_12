@@ -18,6 +18,11 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    # Error handlers registration
+    from app.errors import register_error_handlers
+
+    register_error_handlers(app)
+
     # Routes registration
     from app.routes import trip_bp
 

@@ -2,7 +2,7 @@ import logging
 
 from flask import Flask, jsonify
 from pydantic import ValidationError
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,15 @@ def register_error_handlers(app: Flask) -> None:
                 "message": str(error),
             }
         ), 400
+
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(error: HTTPException):
+        return jsonify(
+            {
+                "error": error.name.upper().replace(" ", "_"),
+                "message": error.description,
+            }
+        ), error.code
 
     @app.errorhandler(Exception)
     def handle_generic_error(error: Exception):

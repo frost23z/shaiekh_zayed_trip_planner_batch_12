@@ -1,8 +1,7 @@
 from flask import Blueprint, jsonify, request
 
-from app import db, services
+from app import services
 from app.dtos import TripCreate, TripUpdate
-from app.models import Trip
 
 trip_bp = Blueprint("trip", __name__)
 
@@ -37,19 +36,11 @@ def update_trip(trip_id: int):
 
 @trip_bp.delete("/<int:trip_id>")
 def delete_trip(trip_id: int):
-    trip = db.session.get(Trip, trip_id)
-    if not trip:
-        return jsonify(
-            {
-                "error": "TRIP_NOT_FOUND",
-                "message": f"Trip with ID {trip_id} was not found.",
-            }
-        ), 404
+    result = services.delete_trip(trip_id)
+    if not result:
+        return trip_not_found_response(trip_id)
 
-    db.session.delete(trip)
-    db.session.commit()
-
-    return jsonify({"message": f"Trip with ID {trip_id} has been deleted."}), 200
+    return jsonify(result), 200
 
 
 def trip_not_found_response(trip_id: int):

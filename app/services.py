@@ -60,3 +60,14 @@ def update_trip(trip_id: int, data: TripUpdate):
 
     response = TripResponse.model_validate(trip).model_dump(mode="json")
     return response
+
+
+def delete_trip(trip_id: int):
+    trip = db.session.get(Trip, trip_id)
+    if not trip:
+        return None
+
+    db.session.delete(trip)
+    db.session.commit()
+
+    return {"message": f"Trip with ID {trip_id} has been deleted."}

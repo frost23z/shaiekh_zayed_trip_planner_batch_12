@@ -18,8 +18,13 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    # Routes registration
+    from app.routes import trip_bp
+
     @app.get("/health")
     def health_check():
         return jsonify({"status": "ok"}), 200
+
+    app.register_blueprint(trip_bp, url_prefix="/api/v1/trips")
 
     return app

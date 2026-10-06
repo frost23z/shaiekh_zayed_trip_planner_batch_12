@@ -78,3 +78,20 @@ def update_trip(trip_id: int):
     db.session.commit()
 
     return jsonify(TripResponse.model_validate(trip).model_dump(mode="json")), 200
+
+
+@trip_bp.delete("/<int:trip_id>")
+def delete_trip(trip_id: int):
+    trip = db.session.get(Trip, trip_id)
+    if not trip:
+        return jsonify(
+            {
+                "error": "TRIP_NOT_FOUND",
+                "message": f"Trip with ID {trip_id} was not found.",
+            }
+        ), 404
+
+    db.session.delete(trip)
+    db.session.commit()
+
+    return jsonify({"message": f"Trip with ID {trip_id} has been deleted."}), 200

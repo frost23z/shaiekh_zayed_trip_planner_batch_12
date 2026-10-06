@@ -1,0 +1,18 @@
+from datetime import date
+
+from pydantic import BaseModel, Field, PositiveInt, model_validator
+
+
+class TripCreate(BaseModel):
+    destination: str = Field(min_length=1, max_length=100)
+    start_date: date
+    end_date: date
+    budget: PositiveInt
+    max_travelers: PositiveInt
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if self.end_date <= self.start_date:
+            raise ValueError("trip end_date must be later than start_date.")
+
+        return self

@@ -3,3 +3,8 @@ pre-commit:
   jobs:
     - name: generate requirements.txt
       run: .venv/bin/pip freeze > requirements.txt && git add requirements.txt
+
+    - name: lint and format
+      glob: "**/*.py"
+      run: .venv/bin/ruff format {staged_files} && .venv/bin/ruff check --fix {staged_files}
+      stage_fixed: true

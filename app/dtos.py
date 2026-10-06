@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel, Field, PositiveInt, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt, model_validator
 
 
 class TripCreate(BaseModel):
@@ -16,3 +16,15 @@ class TripCreate(BaseModel):
             raise ValueError("trip end_date must be later than start_date.")
 
         return self
+
+
+class TripResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    destination: str
+    start_date: date
+    end_date: date
+    budget: int
+    max_travelers: int
+    status: str

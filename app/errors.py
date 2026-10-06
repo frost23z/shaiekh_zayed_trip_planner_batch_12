@@ -2,21 +2,12 @@ import logging
 
 from flask import Flask, jsonify
 from pydantic import ValidationError
-from werkzeug.exceptions import BadRequest, HTTPException
+from werkzeug.exceptions import HTTPException
 
 logger = logging.getLogger(__name__)
 
 
 def register_error_handlers(app: Flask) -> None:
-    @app.errorhandler(BadRequest)
-    def handle_bad_request(error: BadRequest):
-        return jsonify(
-            {
-                "error": "INVALID_JSON_DATA",
-                "message": "Invalid JSON data",
-            }
-        ), 400
-
     @app.errorhandler(ValidationError)
     def handle_validation_error(error: ValidationError):
         return jsonify(

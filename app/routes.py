@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request
-from sqlalchemy import select
 
 from app import db, services
 from app.dtos import TripCreate, TripResponse, TripUpdate
@@ -16,26 +15,16 @@ def create_trip():
 
 @trip_bp.get("/")
 def get_trips():
-    trips = db.session.scalars(select(Trip)).all()
-
-    response = [
-        TripResponse.model_validate(trip).model_dump(mode="json") for trip in trips
-    ]
-    return jsonify(response), 200
+    return jsonify(services.get_trips()), 200
 
 
 @trip_bp.get("/<int:trip_id>")
 def get_trip(trip_id: int):
-    trip = db.session.get(Trip, trip_id)
+    trip = services.get_trip(trip_id)
     if not trip:
-        return jsonify(
-            {
-                "error": "TRIP_NOT_FOUND",
-                "message": f"Trip with ID {trip_id} was not found.",
-            }
-        ), 404
+        return trip_not_found_response(trip_id)
 
-    return jsonify(TripResponse.model_validate(trip).model_dump(mode="json")), 200
+    return jsonify(trip), 200
 
 
 @trip_bp.put("/<int:trip_id>")
@@ -82,3 +71,12 @@ def delete_trip(trip_id: int):
     db.session.commit()
 
     return jsonify({"message": f"Trip with ID {trip_id} has been deleted."}), 200
+
+
+def trip_not_found_response(trip_id: int):
+    return jsonify(
+        {
+            "error": "TRIP_NOT_FOUND",
+            "message": f"Trip with ID {trip_id} was not found.",
+        }
+    ), 404

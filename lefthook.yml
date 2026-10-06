@@ -1,0 +1,5 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: generate requirements.txt
+      run: .venv/bin/pip freeze > requirements.txt && git add requirements.txt

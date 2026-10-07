@@ -4,6 +4,7 @@ from typing import Annotated
 from pydantic import (
     BaseModel,
     ConfigDict,
+    EmailStr,
     PositiveInt,
     StringConstraints,
     model_validator,
@@ -25,18 +26,6 @@ class TripCreate(BaseModel):
             raise ValueError("trip end_date must be later than start_date.")
 
         return self
-
-
-class TripResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    destination: str
-    start_date: date
-    end_date: date
-    budget: int
-    max_travelers: int
-    status: str
 
 
 class TripUpdate(BaseModel):
@@ -62,3 +51,31 @@ class TripUpdate(BaseModel):
             raise ValueError("trip end_date must be later than start_date.")
 
         return self
+
+
+class TravelerCreate(BaseModel):
+    name: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=3, max_length=100)
+    ]
+    email: EmailStr
+
+
+class TravelerResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    email: EmailStr
+
+
+class TripResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    destination: str
+    start_date: date
+    end_date: date
+    budget: int
+    max_travelers: int
+    status: str
+    travelers: list[TravelerResponse] = []

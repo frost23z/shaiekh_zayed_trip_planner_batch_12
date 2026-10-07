@@ -103,6 +103,13 @@ def add_traveler_to_trip(trip_id: int, traveler_data: TravelerCreate):
     if traveler in trip.travelers:
         raise ValueError("Traveler is already added to this trip.")
 
+    for existing_trip in traveler.trips:
+        if (
+            existing_trip.start_date < trip.end_date
+            and existing_trip.end_date > trip.start_date
+        ):
+            raise ValueError("Traveler already has a trip with overlapping dates.")
+
     trip.travelers.append(traveler)
 
     db.session.commit()

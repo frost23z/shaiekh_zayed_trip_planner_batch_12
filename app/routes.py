@@ -52,3 +52,13 @@ def add_traveler_to_trip(trip_id: int):
         return jsonify(services.trip_not_found_response(trip_id)), 404
 
     return jsonify(result), 201
+
+
+@trip_bp.delete("/<int:trip_id>/travelers/<int:traveler_id>")
+def remove_traveler_from_trip(trip_id: int, traveler_id: int):
+    result = services.remove_traveler_from_trip(trip_id, traveler_id)
+
+    if not result:
+        return jsonify(services.trip_not_found_response(trip_id)), 404
+
+    return jsonify(result), 200

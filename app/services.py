@@ -117,6 +117,24 @@ def add_traveler_to_trip(trip_id: int, traveler_data: TravelerCreate):
     return TripResponse.model_validate(trip).model_dump(mode="json")
 
 
+def remove_traveler_from_trip(trip_id: int, traveler_id: int):
+    trip = db.session.get(Trip, trip_id)
+
+    if not trip:
+        return None
+
+    traveler = db.session.get(Traveler, traveler_id)
+
+    if not traveler or traveler not in trip.travelers:
+        raise ValueError("Traveler is not part of this trip.")
+
+    trip.travelers.remove(traveler)
+
+    db.session.commit()
+
+    return TripResponse.model_validate(trip).model_dump(mode="json")
+
+
 def trip_not_found_response(trip_id: int):
     return {
         "error": "TRIP_NOT_FOUND",

@@ -60,12 +60,32 @@ class TravelerCreate(BaseModel):
     email: EmailStr
 
 
+class ExpenseCreate(BaseModel):
+    title: Annotated[
+        str,
+        StringConstraints(
+            strip_whitespace=True,
+            min_length=1,
+            max_length=100,
+        ),
+    ]
+    amount: PositiveInt
+
+
 class TravelerResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str
     email: EmailStr
+
+
+class ExpenseResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    amount: int
 
 
 class TripResponse(BaseModel):
@@ -79,3 +99,4 @@ class TripResponse(BaseModel):
     max_travelers: int
     status: str
     travelers: list[TravelerResponse] = []
+    expenses: list[ExpenseResponse] = []

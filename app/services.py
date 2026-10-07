@@ -2,12 +2,13 @@ from sqlalchemy import select
 
 from app import db
 from app.dtos import (
+    ExpenseCreate,
     TravelerCreate,
     TripCreate,
     TripResponse,
     TripUpdate,
 )
-from app.models import Traveler, Trip
+from app.models import Expense, Traveler, Trip
 
 
 def create_trip(data: TripCreate):
@@ -137,6 +138,32 @@ def remove_traveler_from_trip(trip_id: int, traveler_id: int):
 
     trip.travelers.remove(traveler)
 
+    db.session.commit()
+
+    return TripResponse.model_validate(trip).model_dump(mode="json")
+
+
+def add_expense_to_trip(trip_id: int, expense_data: ExpenseCreate):
+    trip = db.session.get(Trip, trip_id)
+
+    if not trip:
+        return None
+
+    if trip.status not in ("PLANNED", "ONGOING"):
+        raise ValueError("Expenses can only be added to planned or ongoing trips.")
+
+    total_expenses = sum(expense.amount for expense in trip.expenses)
+
+    if total_expenses + expense_data.amount > trip.budget:
+        raise ValueError("Trip expenses cannot exceed the trip budget.")
+
+    expense = Expense(
+        title=expense_data.title,
+        amount=expense_data.amount,
+        trip=trip,
+    )
+
+    db.session.add(expense)
     db.session.commit()
 
     return TripResponse.model_validate(trip).model_dump(mode="json")

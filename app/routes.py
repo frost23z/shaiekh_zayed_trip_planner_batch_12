@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from app import services
-from app.dtos import TravelerCreate, TripCreate, TripUpdate
+from app.dtos import ExpenseCreate, TravelerCreate, TripCreate, TripUpdate
 
 trip_bp = Blueprint("trip", __name__)
 
@@ -62,3 +62,16 @@ def remove_traveler_from_trip(trip_id: int, traveler_id: int):
         return jsonify(services.trip_not_found_response(trip_id)), 404
 
     return jsonify(result), 200
+
+
+@trip_bp.post("/<int:trip_id>/expenses")
+def add_expense_to_trip(trip_id: int):
+    result = services.add_expense_to_trip(
+        trip_id,
+        ExpenseCreate.model_validate(request.get_json()),
+    )
+
+    if not result:
+        return jsonify(services.trip_not_found_response(trip_id)), 404
+
+    return jsonify(result), 201

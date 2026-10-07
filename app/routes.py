@@ -75,3 +75,13 @@ def add_expense_to_trip(trip_id: int):
         return jsonify(services.trip_not_found_response(trip_id)), 404
 
     return jsonify(result), 201
+
+
+@trip_bp.get("/<int:trip_id>/summary")
+def get_trip_summary(trip_id: int):
+    result = services.get_trip_summary(trip_id)
+
+    if not result:
+        return jsonify(services.trip_not_found_response(trip_id)), 404
+
+    return jsonify(result), 200

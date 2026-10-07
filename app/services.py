@@ -169,6 +169,23 @@ def add_expense_to_trip(trip_id: int, expense_data: ExpenseCreate):
     return TripResponse.model_validate(trip).model_dump(mode="json")
 
 
+def get_trip_summary(trip_id: int):
+    trip = db.session.get(Trip, trip_id)
+
+    if not trip:
+        return None
+
+    traveler_count = len(trip.travelers)
+    total_expense = sum(expense.amount for expense in trip.expenses)
+
+    return {
+        "traveler_count": traveler_count,
+        "available_seats": trip.max_travelers - traveler_count,
+        "total_expense": total_expense,
+        "remaining_budget": trip.budget - total_expense,
+    }
+
+
 def trip_not_found_response(trip_id: int):
     return {
         "error": "TRIP_NOT_FOUND",

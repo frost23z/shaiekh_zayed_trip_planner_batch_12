@@ -13,7 +13,7 @@ def create_app():
 
     db.init_app(app)
 
-    from app.models import Trip  # ruff: ignore[F401]
+    from app import models  # ruff: ignore[F401]
 
     with app.app_context():
         db.create_all()

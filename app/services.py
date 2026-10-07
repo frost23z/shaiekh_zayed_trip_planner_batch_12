@@ -1,8 +1,13 @@
 from sqlalchemy import select
 
 from app import db
-from app.dtos import TripCreate, TripResponse, TripUpdate
-from app.models import Trip
+from app.dtos import (
+    TravelerCreate,
+    TripCreate,
+    TripResponse,
+    TripUpdate,
+)
+from app.models import Traveler, Trip
 
 
 def create_trip(data: TripCreate):
@@ -71,6 +76,38 @@ def delete_trip(trip_id: int):
     db.session.commit()
 
     return {"message": f"Trip with ID {trip_id} has been deleted."}
+
+
+def add_traveler_to_trip(trip_id: int, traveler_data: TravelerCreate):
+    trip = db.session.get(Trip, trip_id)
+
+    if not trip:
+        return None
+
+    if trip.status != "PLANNED":
+        raise ValueError("Travelers can only be added to planned trips.")
+
+    if len(trip.travelers) >= trip.max_travelers:
+        raise ValueError("Trip has reached its maximum number of travelers.")
+
+    traveler = db.session.scalar(
+        select(Traveler).where(Traveler.email == traveler_data.email)
+    )
+
+    if traveler is None:
+        traveler = Traveler(
+            name=traveler_data.name,
+            email=traveler_data.email,
+        )
+
+    if traveler in trip.travelers:
+        raise ValueError("Traveler is already added to this trip.")
+
+    trip.travelers.append(traveler)
+
+    db.session.commit()
+
+    return TripResponse.model_validate(trip).model_dump(mode="json")
 
 
 def trip_not_found_response(trip_id: int):

@@ -52,6 +52,13 @@ def update_trip(trip_id: int, data: TripUpdate):
 
     update_data = data.model_dump(exclude_none=True)
 
+    if "max_travelers" in update_data and update_data["max_travelers"] < len(
+        trip.travelers
+    ):
+        raise ValueError(
+            "max_travelers cannot be less than the current number of travelers."
+        )
+
     new_start_date = update_data.get("start_date", trip.start_date)
     new_end_date = update_data.get("end_date", trip.end_date)
 

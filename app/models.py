@@ -36,6 +36,11 @@ class Trip(db.Model):
         back_populates="trips",
     )
 
+    expenses: Mapped[list["Expense"]] = relationship(
+        back_populates="trip",
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self) -> str:
         return f"<Trip id={self.id}, destination={self.destination}, start_date={self.start_date}, end_date={self.end_date}, budget={self.budget}, max_travelers={self.max_travelers}, status={self.status}>"
 
@@ -50,4 +55,21 @@ class Traveler(db.Model):
     trips: Mapped[list["Trip"]] = relationship(
         secondary=trip_travelers,
         back_populates="travelers",
+    )
+
+
+class Expense(db.Model):
+    __tablename__ = "expenses"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(nullable=False)
+    amount: Mapped[int] = mapped_column(nullable=False)
+
+    trip_id: Mapped[int] = mapped_column(
+        ForeignKey("trips.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    trip: Mapped["Trip"] = relationship(
+        back_populates="expenses",
     )

@@ -7,6 +7,14 @@ from werkzeug.exceptions import HTTPException
 logger = logging.getLogger(__name__)
 
 
+class AppError(Exception):
+    def __init__(self, status: int, code: str, message: str):
+        super().__init__(message)
+        self.status = status
+        self.code = code
+        self.message = message
+
+
 def register_error_handlers(app: Flask) -> None:
     @app.errorhandler(ValidationError)
     def handle_validation_error(error: ValidationError):
@@ -18,14 +26,9 @@ def register_error_handlers(app: Flask) -> None:
             }
         ), 400
 
-    @app.errorhandler(ValueError)
-    def handle_value_error(error: ValueError):
-        return jsonify(
-            {
-                "error": "VALUE_ERROR",
-                "message": str(error),
-            }
-        ), 400
+    @app.errorhandler(AppError)
+    def handle_app_error(error: AppError):
+        return jsonify({"error": error.code, "message": error.message}), error.status
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(error: HTTPException):

@@ -9,6 +9,7 @@ from app.dtos import (
     TripStatusUpdate,
     TripUpdate,
 )
+from app.errors import AppError
 from app.models import Expense, Traveler, Trip
 
 ALLOWED_STATUS_TRANSITIONS = {
@@ -64,15 +65,19 @@ def update_trip(trip_id: int, data: TripUpdate):
     if "max_travelers" in update_data and update_data["max_travelers"] < len(
         trip.travelers
     ):
-        raise ValueError(
-            "max_travelers cannot be less than the current number of travelers."
+        raise AppError(
+            409,
+            "MAX_TRAVELERS_BELOW_CURRENT",
+            "max_travelers cannot be less than the current number of travelers.",
         )
 
     new_start_date = update_data.get("start_date", trip.start_date)
     new_end_date = update_data.get("end_date", trip.end_date)
 
     if new_end_date <= new_start_date:
-        raise ValueError("trip end_date must be later than start_date.")
+        raise AppError(
+            400, "VALIDATION_ERROR", "trip end_date must be later than start_date."
+        )
 
     for key, value in update_data.items():
         setattr(trip, key, value)
@@ -101,10 +106,16 @@ def add_traveler_to_trip(trip_id: int, traveler_data: TravelerCreate):
         return None
 
     if trip.status != "PLANNED":
-        raise ValueError("Travelers can only be added to planned trips.")
+        raise AppError(
+            409, "INVALID_TRIP_STATUS", "Travelers can only be added to planned trips."
+        )
 
     if len(trip.travelers) >= trip.max_travelers:
-        raise ValueError("Trip has reached its maximum number of travelers.")
+        raise AppError(
+            409,
+            "TRIP_FULL",
+            "The trip has reached its maximum traveler capacity.",
+        )
 
     traveler = db.session.scalar(
         select(Traveler).where(Traveler.email == traveler_data.email)
@@ -117,14 +128,20 @@ def add_traveler_to_trip(trip_id: int, traveler_data: TravelerCreate):
         )
 
     if traveler in trip.travelers:
-        raise ValueError("Traveler is already added to this trip.")
+        raise AppError(
+            409, "DUPLICATE_TRAVELER", "Traveler is already added to this trip."
+        )
 
     for existing_trip in traveler.trips:
         if (
             existing_trip.start_date < trip.end_date
             and existing_trip.end_date > trip.start_date
         ):
-            raise ValueError("Traveler already has a trip with overlapping dates.")
+            raise AppError(
+                409,
+                "TRAVELER_OVERLAP",
+                "Traveler already has a trip with overlapping dates.",
+            )
 
     trip.travelers.append(traveler)
 
@@ -142,7 +159,7 @@ def remove_traveler_from_trip(trip_id: int, traveler_id: int):
     traveler = db.session.get(Traveler, traveler_id)
 
     if not traveler or traveler not in trip.travelers:
-        raise ValueError("Traveler is not part of this trip.")
+        raise AppError(404, "TRAVELER_NOT_FOUND", "Traveler is not part of this trip.")
 
     trip.travelers.remove(traveler)
 
@@ -158,12 +175,18 @@ def add_expense_to_trip(trip_id: int, expense_data: ExpenseCreate):
         return None
 
     if trip.status not in ("PLANNED", "ONGOING"):
-        raise ValueError("Expenses can only be added to planned or ongoing trips.")
+        raise AppError(
+            409,
+            "INVALID_TRIP_STATUS",
+            "Expenses can only be added to planned or ongoing trips.",
+        )
 
     total_expenses = sum(expense.amount for expense in trip.expenses)
 
     if total_expenses + expense_data.amount > trip.budget:
-        raise ValueError("Trip expenses cannot exceed the trip budget.")
+        raise AppError(
+            409, "BUDGET_EXCEEDED", "Trip expenses cannot exceed the trip budget."
+        )
 
     expense = Expense(
         title=expense_data.title,
@@ -203,8 +226,10 @@ def update_trip_status(trip_id: int, status_data: TripStatusUpdate):
     allowed_statuses = ALLOWED_STATUS_TRANSITIONS[trip.status]
 
     if status_data.status not in allowed_statuses:
-        raise ValueError(
-            f"Trip cannot transition from {trip.status} to {status_data.status}."
+        raise AppError(
+            409,
+            "INVALID_STATUS_TRANSITION",
+            f"Trip cannot transition from {trip.status} to {status_data.status}.",
         )
 
     trip.status = status_data.status

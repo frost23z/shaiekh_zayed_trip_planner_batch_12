@@ -6,9 +6,17 @@ from app.dtos import (
     TravelerCreate,
     TripCreate,
     TripResponse,
+    TripStatusUpdate,
     TripUpdate,
 )
 from app.models import Expense, Traveler, Trip
+
+ALLOWED_STATUS_TRANSITIONS = {
+    "PLANNED": {"ONGOING", "CANCELLED"},
+    "ONGOING": {"COMPLETED", "CANCELLED"},
+    "COMPLETED": set(),
+    "CANCELLED": set(),
+}
 
 
 def create_trip(data: TripCreate):
@@ -184,6 +192,26 @@ def get_trip_summary(trip_id: int):
         "total_expense": total_expense,
         "remaining_budget": trip.budget - total_expense,
     }
+
+
+def update_trip_status(trip_id: int, status_data: TripStatusUpdate):
+    trip = db.session.get(Trip, trip_id)
+
+    if not trip:
+        return None
+
+    allowed_statuses = ALLOWED_STATUS_TRANSITIONS[trip.status]
+
+    if status_data.status not in allowed_statuses:
+        raise ValueError(
+            f"Trip cannot transition from {trip.status} to {status_data.status}."
+        )
+
+    trip.status = status_data.status
+
+    db.session.commit()
+
+    return TripResponse.model_validate(trip).model_dump(mode="json")
 
 
 def trip_not_found_response(trip_id: int):

@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import (
     BaseModel,
@@ -100,3 +100,7 @@ class TripResponse(BaseModel):
     status: str
     travelers: list[TravelerResponse] = []
     expenses: list[ExpenseResponse] = []
+
+
+class TripStatusUpdate(BaseModel):
+    status: Literal["PLANNED", "ONGOING", "COMPLETED", "CANCELLED"]

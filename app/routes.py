@@ -1,7 +1,13 @@
 from flask import Blueprint, jsonify, request
 
 from app import services
-from app.dtos import ExpenseCreate, TravelerCreate, TripCreate, TripUpdate
+from app.dtos import (
+    ExpenseCreate,
+    TravelerCreate,
+    TripCreate,
+    TripStatusUpdate,
+    TripUpdate,
+)
 
 trip_bp = Blueprint("trip", __name__)
 
@@ -80,6 +86,19 @@ def add_expense_to_trip(trip_id: int):
 @trip_bp.get("/<int:trip_id>/summary")
 def get_trip_summary(trip_id: int):
     result = services.get_trip_summary(trip_id)
+
+    if not result:
+        return jsonify(services.trip_not_found_response(trip_id)), 404
+
+    return jsonify(result), 200
+
+
+@trip_bp.patch("/<int:trip_id>/status")
+def update_trip_status(trip_id: int):
+    result = services.update_trip_status(
+        trip_id,
+        TripStatusUpdate.model_validate(request.get_json()),
+    )
 
     if not result:
         return jsonify(services.trip_not_found_response(trip_id)), 404

@@ -117,6 +117,15 @@ def add_traveler_to_trip(trip_id: int, traveler_data: TravelerCreate):
             409, "INVALID_TRIP_STATUS", "Travelers can only be added to planned trips."
         )
 
+    traveler = db.session.scalar(
+        select(Traveler).where(Traveler.email == traveler_data.email)
+    )
+
+    if traveler is not None and traveler in trip.travelers:
+        raise AppError(
+            409, "DUPLICATE_TRAVELER", "Traveler is already added to this trip."
+        )
+
     if len(trip.travelers) >= trip.max_travelers:
         raise AppError(
             409,
@@ -124,31 +133,22 @@ def add_traveler_to_trip(trip_id: int, traveler_data: TravelerCreate):
             "The trip has reached its maximum traveler capacity.",
         )
 
-    traveler = db.session.scalar(
-        select(Traveler).where(Traveler.email == traveler_data.email)
-    )
-
     if traveler is None:
         traveler = Traveler(
             name=traveler_data.name,
             email=traveler_data.email,
         )
-
-    if traveler in trip.travelers:
-        raise AppError(
-            409, "DUPLICATE_TRAVELER", "Traveler is already added to this trip."
-        )
-
-    for existing_trip in traveler.trips:
-        if (
-            existing_trip.start_date < trip.end_date
-            and existing_trip.end_date > trip.start_date
-        ):
-            raise AppError(
-                409,
-                "TRAVELER_OVERLAP",
-                "Traveler already has a trip with overlapping dates.",
-            )
+    else:
+        for existing_trip in traveler.trips:
+            if (
+                existing_trip.start_date < trip.end_date
+                and existing_trip.end_date > trip.start_date
+            ):
+                raise AppError(
+                    409,
+                    "TRAVELER_OVERLAP",
+                    "Traveler already has a trip with overlapping dates.",
+                )
 
     trip.travelers.append(traveler)
 

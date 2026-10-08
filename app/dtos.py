@@ -3,6 +3,7 @@ from typing import Annotated, Literal
 
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     EmailStr,
     PositiveInt,
@@ -57,7 +58,9 @@ class TravelerCreate(BaseModel):
     name: Annotated[
         str, StringConstraints(strip_whitespace=True, min_length=3, max_length=100)
     ]
-    email: EmailStr
+    email: Annotated[
+        EmailStr, BeforeValidator(lambda v: v.lower() if isinstance(v, str) else v)
+    ]
 
 
 class ExpenseCreate(BaseModel):

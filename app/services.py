@@ -60,6 +60,13 @@ def update_trip(trip_id: int, data: TripUpdate):
     if not trip:
         return None
 
+    if trip.status in ("COMPLETED", "CANCELLED"):
+        raise AppError(
+            409,
+            "INVALID_TRIP_STATUS",
+            "Completed or cancelled trips cannot be edited.",
+        )
+
     update_data = data.model_dump(exclude_none=True)
 
     if "max_travelers" in update_data and update_data["max_travelers"] < len(
@@ -155,6 +162,13 @@ def remove_traveler_from_trip(trip_id: int, traveler_id: int):
 
     if not trip:
         return None
+
+    if trip.status in ("COMPLETED", "CANCELLED"):
+        raise AppError(
+            409,
+            "INVALID_TRIP_STATUS",
+            "Completed or cancelled trips cannot be edited.",
+        )
 
     traveler = db.session.get(Traveler, traveler_id)
 

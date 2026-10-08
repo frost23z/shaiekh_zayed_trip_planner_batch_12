@@ -6,10 +6,13 @@ from pydantic import (
     BeforeValidator,
     ConfigDict,
     EmailStr,
+    Field,
     PositiveInt,
     StringConstraints,
     model_validator,
 )
+
+MAX_INT = 2**63 - 1
 
 
 class TripCreate(BaseModel):
@@ -18,8 +21,8 @@ class TripCreate(BaseModel):
     ]
     start_date: date
     end_date: date
-    budget: PositiveInt
-    max_travelers: PositiveInt
+    budget: PositiveInt = Field(le=MAX_INT)
+    max_travelers: PositiveInt = Field(le=MAX_INT)
 
     @model_validator(mode="after")
     def validate_dates(self):
@@ -36,8 +39,8 @@ class TripUpdate(BaseModel):
     ] = None
     start_date: date | None = None
     end_date: date | None = None
-    budget: PositiveInt | None = None
-    max_travelers: PositiveInt | None = None
+    budget: PositiveInt | None = Field(default=None, le=MAX_INT)
+    max_travelers: PositiveInt | None = Field(default=None, le=MAX_INT)
 
     @model_validator(mode="after")
     def validate_update(self):
@@ -72,7 +75,7 @@ class ExpenseCreate(BaseModel):
             max_length=100,
         ),
     ]
-    amount: PositiveInt
+    amount: PositiveInt = Field(le=MAX_INT)
 
 
 class TravelerResponse(BaseModel):

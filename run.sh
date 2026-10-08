@@ -23,5 +23,8 @@ source "$VENV_DIR/bin/activate"
 echo "==> Installing dependencies..."
 python -m pip install -r requirements.txt
 
+echo "==> Running tests..."
+python -m pytest
+
 echo "==> Starting Smart Group Trip Planner API..."
 exec python run.py

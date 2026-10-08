@@ -20,6 +20,10 @@ ALLOWED_STATUS_TRANSITIONS = {
 }
 
 
+def has_trip_overlap(start_date, end_date, other_start_date, other_end_date):
+    return start_date < other_end_date and end_date > other_start_date
+
+
 def create_trip(data: TripCreate):
     trip = Trip(
         destination=data.destination,
@@ -83,8 +87,37 @@ def update_trip(trip_id: int, data: TripUpdate):
 
     if new_end_date <= new_start_date:
         raise AppError(
-            400, "VALIDATION_ERROR", "trip end_date must be later than start_date."
+            400,
+            "VALIDATION_ERROR",
+            "trip end_date must be later than start_date.",
         )
+
+    total_expenses = sum(expense.amount for expense in trip.expenses)
+
+    if "budget" in update_data and update_data["budget"] < total_expenses:
+        raise AppError(
+            409,
+            "BUDGET_BELOW_EXPENSES",
+            "budget cannot be less than the total expenses already added.",
+        )
+
+    if "start_date" in update_data or "end_date" in update_data:
+        for traveler in trip.travelers:
+            for existing_trip in traveler.trips:
+                if existing_trip.id == trip.id:
+                    continue
+
+                if has_trip_overlap(
+                    existing_trip.start_date,
+                    existing_trip.end_date,
+                    new_start_date,
+                    new_end_date,
+                ):
+                    raise AppError(
+                        409,
+                        "TRAVELER_OVERLAP",
+                        "Traveler already has a trip with overlapping dates.",
+                    )
 
     for key, value in update_data.items():
         setattr(trip, key, value)
@@ -140,9 +173,11 @@ def add_traveler_to_trip(trip_id: int, traveler_data: TravelerCreate):
         )
     else:
         for existing_trip in traveler.trips:
-            if (
-                existing_trip.start_date < trip.end_date
-                and existing_trip.end_date > trip.start_date
+            if has_trip_overlap(
+                existing_trip.start_date,
+                existing_trip.end_date,
+                trip.start_date,
+                trip.end_date,
             ):
                 raise AppError(
                     409,
@@ -247,7 +282,6 @@ def update_trip_status(trip_id: int, status_data: TripStatusUpdate):
         )
 
     trip.status = status_data.status
-
     db.session.commit()
 
     return TripResponse.model_validate(trip).model_dump(mode="json")
